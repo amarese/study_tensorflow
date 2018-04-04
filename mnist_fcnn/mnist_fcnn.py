@@ -53,13 +53,20 @@ def get_accuracy(model, result, name):
         return accuracy
 
 
+def variable_summaries(cost, accuracy, name):
+    with tf.name_scope(name):
+        tf.summary.scalar('cost', cost)
+        tf.summary.scalar('accuracy', accuracy)
+        return tf.summary.merge_all()
+
+
 def main():
     # load mnist data
     mnist = input_data.read_data_sets("../data/mnist/", one_hot=True)
 
     # placeholder
-    X = tf.placeholder(tf.float32, [None, input_size], name="X")
-    Y = tf.placeholder(tf.float32, [None, number_classes], name="Y")
+    X = tf.placeholder(tf.float32, [None, input_size], name="input")
+    Y = tf.placeholder(tf.float32, [None, number_classes], name="labels")
 
     # model
     model = get_model(X)
@@ -71,9 +78,13 @@ def main():
     # accuracy
     accuracy = get_accuracy(model, Y, "accuracy")
 
+    summary = variable_summaries(cost, accuracy, "summaries")
+
     # training
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
+
+        writer = tf.summary.FileWriter('result', sess.graph)
 
         for epoch in range(training_epochs):
             avg_cost = 0
@@ -81,15 +92,13 @@ def main():
 
             for i in range(total_batch):
                 batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-                c, _ = sess.run([cost, optimizer], feed_dict={X: batch_xs, Y: batch_ys})
+                c, _, s = sess.run([cost, optimizer, summary], feed_dict={X: batch_xs, Y: batch_ys})
                 avg_cost += c / total_batch
+            writer.add_summary(s, epoch)
 
             print('epoch :', '%04d' % (epoch + 1), ' cost :', '{:.9f}'.format(avg_cost))
 
         print("training done")
-
-        # save graph
-        tf.summary.FileWriter('result', sess.graph)
 
         # evaluate
         print("accuracy: ", accuracy.eval(session=sess, feed_dict={X: mnist.test.images, Y: mnist.test.labels}))
