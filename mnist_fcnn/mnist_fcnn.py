@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
+import re
 from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.python.framework.graph_util import convert_variables_to_constants
 
 data_dict = None
 var_dict = {}
 
 number_classes = 10
 input_size = 28 * 28
-training_epochs = 20
+training_epochs = 10
+max_epoch = 10000
 batch_size = 100
 
 
@@ -38,7 +41,7 @@ def fc_layer(bottom, in_size, out_size, name):
 
 def get_model(X):
     fc = fc_layer(X, input_size, number_classes, "fc")
-    return tf.nn.softmax(fc, name="prob");
+    return tf.nn.softmax(fc, name="output");
 
 
 def get_cost(model, result, name):
@@ -59,6 +62,11 @@ def variable_summaries(cost, accuracy, name):
         tf.summary.scalar('accuracy', accuracy)
         return tf.summary.merge_all()
 
+def get_epoch_number(model_path):
+    found_num = re.search(r'\d+', model_path)
+    if found_num:
+        checkpoint_id = int(found_num.group(0))
+        return checkpoint_id
 
 def main():
     # load mnist data
@@ -80,13 +88,20 @@ def main():
 
     summary = variable_summaries(cost, accuracy, "summaries")
 
+    saver = tf.train.Saver()
     # training
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
+        checkpoint = tf.train.get_checkpoint_state("./checkpoint")
+        if checkpoint:
+            saver.restore(sess, checkpoint.model_checkpoint_path)
+            current_epoch = get_epoch_number(checkpoint.model_checkpoint_path) + 1
+        else:
+            current_epoch = 0
 
         writer = tf.summary.FileWriter('result', sess.graph)
 
-        for epoch in range(training_epochs):
+        for epoch in range(current_epoch, current_epoch + training_epochs):
             avg_cost = 0
             total_batch = int(mnist.train.num_examples / batch_size)
 
@@ -95,13 +110,22 @@ def main():
                 c, _, s = sess.run([cost, optimizer, summary], feed_dict={X: batch_xs, Y: batch_ys})
                 avg_cost += c / total_batch
             writer.add_summary(s, epoch)
+            saver.save(sess, "./checkpoint/model.ckpt", epoch)
 
             print('epoch :', '%04d' % (epoch + 1), ' cost :', '{:.9f}'.format(avg_cost))
+            if epoch > max_epoch:
+                break;
 
         print("training done")
 
         # evaluate
         print("accuracy: ", accuracy.eval(session=sess, feed_dict={X: mnist.test.images, Y: mnist.test.labels}))
+
+        # save results
+        minimal_graph = convert_variables_to_constants(sess, sess.graph_def, ["output"])
+
+        tf.train.write_graph(minimal_graph, 'result', 'graph.proto', as_text=False)
+        tf.train.write_graph(minimal_graph, 'result', 'graph.txt', as_text=True)
 
 
 if __name__ == '__main__':
