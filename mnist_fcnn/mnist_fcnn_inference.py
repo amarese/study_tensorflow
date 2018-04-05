@@ -15,15 +15,17 @@ def create_graph():
 def main():
     # load mnist data
     mnist = input_data.read_data_sets("../data/mnist/", one_hot=True)
+    r = random.randrange(mnist.test.num_examples)
+    image = mnist.test.images[r:r + 1]
+    label = mnist.test.labels[r:r + 1]
 
     create_graph()
 
     with tf.Session() as sess:
         X = sess.graph.get_tensor_by_name("input:0")
         Y = sess.graph.get_tensor_by_name('output:0')
-        r = random.randrange(mnist.test.num_examples)
-        print('Label : ', sess.run(tf.argmax(mnist.test.labels[r:r + 1], 1)))
-        print('Prediction :', sess.run(tf.argmax(Y, 1), {X: mnist.test.images[r:r + 1]}))
+        print('Label : ', sess.run(tf.argmax(label, 1)))
+        print('Prediction :', sess.run(tf.argmax(Y, 1), {X: image}))
 
 
 if __name__ == '__main__':
