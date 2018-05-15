@@ -27,9 +27,12 @@ def next_batch(num, data, labels):
 
     return np.asarray(data_shuffle), np.asarray(labels_shuffle)
 
+
 '''
 get variables from data_dict, if not exist, initialize it and put into data_dict
 '''
+
+
 def get_var(initial_value, name, idx, var_name):
     if data_dict is not None and name in data_dict:
         value = data_dict[name][idx]
@@ -73,6 +76,7 @@ def fc_layer(input_tensor, out_size, name):
 
 
 def get_model(X):
+    keep_prob = 0.5
     # Block 1
     conv1 = conv_layer(X, 64, 32, 32, "conv1")
     conv2 = conv_layer(conv1, 64, 32, 32, "conv2")
@@ -101,9 +105,9 @@ def get_model(X):
     flatten = tf.reshape(mp_5, [-1, flattened_shape], name="flatten")
 
     fc1 = fc_layer(flatten, 4096, "fc1")
-    fc1 = tf.nn.dropout(fc1, 0.5)
+    fc1 = tf.nn.dropout(fc1, keep_prob)
     fc2 = fc_layer(fc1, 4096, "fc2")
-    fc2 = tf.nn.dropout(fc2, 0.5)
+    fc2 = tf.nn.dropout(fc2, keep_prob)
     fc3 = fc_layer(fc2, number_classes, "fc3")
     return tf.identity(fc3, "output");
 
