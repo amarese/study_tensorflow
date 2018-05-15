@@ -145,8 +145,6 @@ def dense_to_one_hot(labels_dense, num_classes):
 
 def load_cifar10_data():
     (x_train, y_train), (x_test, y_test) = load_data()
-    x_test = x_test[:test_size]
-    y_test = y_test[:test_size]
     y_train_one_hot = dense_to_one_hot(y_train, number_classes)
     y_test_one_hot = dense_to_one_hot(y_test, number_classes)
     return (x_train, y_train_one_hot), (x_test, y_test_one_hot)
@@ -193,8 +191,11 @@ def main():
                 sess.run(optimizer, feed_dict={X: batch_xs, Y: batch_ys})
             saver.save(sess, "./checkpoint/model.ckpt", epoch)
 
-            c, a, s = sess.run([cost, accuracy, summary], feed_dict={X: x_test, Y: y_test});
-            print('epoch :', '%04d' % (epoch + 1), ' cost :', '{:.9f}'.format(c), ' accuracy :', '{:.9f}'.format(a))
+            cb, ab = sess.run([cost, accuracy], feed_dict={X: batch_xs, Y: batch_ys});
+            x_test_batch, y_test_batch = next_batch(test_size, x_test, y_test)
+            c, a, s = sess.run([cost, accuracy, summary], feed_dict={X: x_test_batch, Y: y_test_batch});
+            print('epoch :', '%04d' % (epoch + 1), ' batch cost :', '{:.9f}'.format(cb), ' accuracy :',
+                  '{:.9f}'.format(ab), ' test cost :', '{:.9f}'.format(c), ' accuracy :', '{:.9f}'.format(a))
             writer.add_summary(s, epoch)
             if epoch > max_epoch:
                 break;
