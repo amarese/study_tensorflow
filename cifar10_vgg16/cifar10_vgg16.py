@@ -109,12 +109,14 @@ def get_model(X):
     fc2 = fc_layer(fc1, 4096, "fc2")
     fc2 = tf.nn.dropout(fc2, keep_prob)
     fc3 = fc_layer(fc2, number_classes, "fc3")
-    return tf.identity(fc3, "output");
+    softmax = tf.nn.softmax(fc3, name="softmax");
+    return tf.identity(softmax, "output");
 
 
 def get_cost(model, result, name):
     with tf.variable_scope(name):
-        cost = tf.reduce_mean(-tf.reduce_sum(result * tf.log(model), axis=1))
+        # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=result))
+        cost = tf.reduce_mean(-tf.reduce_sum(result * tf.log(model + 1e-7), axis=1))
         return cost
 
 
