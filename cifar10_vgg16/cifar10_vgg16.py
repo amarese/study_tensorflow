@@ -4,6 +4,7 @@ import re
 import numpy as np
 from tensorflow.python.framework.graph_util import convert_variables_to_constants
 from tensorflow.python.keras._impl.keras.datasets.cifar10 import load_data
+from tensorflow.contrib.layers import xavier_initializer
 
 # model data
 data_dict = None
@@ -45,6 +46,8 @@ def get_var(initial_value, name, idx, var_name):
 
 
 def get_conv_var(filter_width, filter_height, in_channels, out_channels, width, height, name):
+    # weights = tf.get_variable(name + "_weights", [filter_width, filter_height, in_channels, out_channels], tf.float32, xavier_initializer())
+    # biases = tf.get_variable(name + "_biases", [out_channels], tf.float32, tf.constant_initializer(0.0))
     weights = get_var(tf.random_normal([filter_width, filter_height, in_channels, out_channels], 0, 0.001), name, 0,
                       name + "_weights")
     biases = get_var(tf.random_normal([out_channels], 0, 0.001), name, 1, name + "_biases")
@@ -61,6 +64,8 @@ def conv_layer(input_tensor, out_channels, width, height, name):
 
 
 def get_fc_var(in_size, out_size, name):
+    # weights = tf.get_variable(name + "_weights", [in_size, out_size], tf.float32, xavier_initializer())
+    # biases = tf.get_variable(name + "_biases", [out_size], tf.float32, tf.constant_initializer(0.0))
     weights = get_var(tf.random_normal([in_size, out_size], 0, 0.001), name, 0, name + "_weights")
     biases = get_var(tf.random_normal([out_size], 0, 0.001), name, 1, name + "_biases")
     return weights, biases
