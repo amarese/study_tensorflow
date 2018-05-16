@@ -207,7 +207,7 @@ def main():
         print("training done")
 
         # evaluate
-        print("accuracy: ", accuracy.eval(session=sess, feed_dict={X: x_test, Y: y_test}))
+        print("accuracy: ", accuracy.eval(session=sess, feed_dict={X: x_test_batch, Y: y_test_batch}))
 
         # save results
         minimal_graph = convert_variables_to_constants(sess, sess.graph_def, ["output"])
